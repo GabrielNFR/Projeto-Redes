@@ -18,9 +18,19 @@ def main():
     print("Escolha um modo de operação:")
     print("[1] Go-Back-N")
     print("[2] Repetição Seletiva")
-    modo = input("Escolha o modo (1 ou 2): ")
     
-    modo_escolhido = "Go-Back-N" if modo == "1" else "Repetição Seletiva"
+    while True:  
+        modo = input("Escolha o modo (1 ou 2): ")
+        
+        if modo == "1":
+            modo_escolhido = "Go-Back-N"
+            break
+        elif modo == "2":
+            modo_escolhido = "Repetição Seletiva"
+            break
+        else:
+            print("Opção inválida, escolha 1 ou 2.")
+
     
     tam_max = int(input("Digite o limite máximo de caracteres por envio (Mínimo de 30:) "))
     
