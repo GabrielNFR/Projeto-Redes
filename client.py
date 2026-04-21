@@ -1,6 +1,7 @@
 import socket
 import json
 import sys
+import hashlib
 
 def main():
     if len(sys.argv) != 3:
@@ -56,10 +57,38 @@ def main():
             
             print(f"Conexão estabelecida com sucesso.")
             print(f"     Servidor aceitou com janela: {janela_atual}")
-            print(f"     Status: {status}")      
+            print(f"     Status: {status}")
+            while True:
+                mensagem_usuario = input("digite a mensagem: ")
+                if len(mensagem_usuario) > tam_max:
+                    print("Erro: Mensagem muito grande.")
+                    continue
+                lista_pdus = fragmentar_e_montar(mensagem_usuario)
+                print(f"[FASE 1 OK] Lista gerada: {lista_pdus}")      
     
     except socket.timeout:
         print("TIMEOUT")
 
+
+def calcular_checksum(payload):
+    return hashlib.md5(payload.encode('utf-8')).hexdigest()
+
+def fragmentar_e_montar(mensagem):
+    pacotes = []
+    seq_num = 0
+    for i in range(0, len(mensagem), 4):
+        payload = mensagem[i:i+4]
+        pacote = {
+            "tipo": "DATA",
+            "seq_num": seq_num,
+            "checksum": calcular_checksum(payload),
+            "payload": payload
+        }
+        pacotes.append(pacote)
+        seq_num += 1
+    return pacotes
+
 if __name__ == "__main__":
     main()      
+
+
