@@ -15,6 +15,9 @@ def main():
 
     print(f"Servidor escutando em {IP}:{PORT}")
 
+    buffer_mensagens = {}
+    cliente_ativo = None
+
     while True:
         data, addr = sock.recvfrom(1024)
         mensagem = json.loads(data.decode('utf-8'))
@@ -23,6 +26,9 @@ def main():
             print(f"\nHandshake recebido de {addr}")
             print(f"Modo: {mensagem.get('modo')}")
             print(f"Tam_max: {mensagem.get('tam_max')}")
+
+            cliente_ativo = addr
+            buffer_mensagens = {}
 
             resposta = {
                 "tipo": "HANDSHAKE_ACK",
@@ -34,18 +40,29 @@ def main():
             print("Resposta enviada.")
 
         elif mensagem.get("tipo") == "DATA":
-            print("\nPacote de dados recebido:")
-            print(f"Seq_num: {mensagem.get('seq_num')}")
-            print(f"Checksum: {mensagem.get('checksum')}")
-            print(f"Payload: {mensagem.get('payload')}")
+            seq_num = mensagem.get('seq_num')
+            payload = mensagem.get('payload')
+            checksum = mensagem.get('checksum')
+
+            print(f"\nRecebido pacote DATA #{seq_num}, payload: '{payload}'")
+
+            buffer_mensagens[seq_num] = payload
 
             ack = {
                 "tipo": "ACK",
-                "seq_num": mensagem.get("seq_num")
+                "seq_num": seq_num
             }
 
             sock.sendto(json.dumps(ack).encode('utf-8'), addr)
-            print(f"ACK enviado para o pacote #{mensagem.get('seq_num')}")
+            print(f"ACK enviado para o pacote #{seq_num}")
+
+        elif mensagem.get("tipo") == "FIN":
+            if buffer_mensagens:
+                chaves_ordenadas = sorted(buffer_mensagens.keys())
+                mensagem_completa = ''.join(buffer_mensagens[k] for k in chaves_ordenadas)
+                print(f"\nMensagem completa recebida: '{mensagem_completa}'")
+            
+            buffer_mensagens = {}
 
 if __name__ == "__main__":
     main()

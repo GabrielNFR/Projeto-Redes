@@ -82,6 +82,12 @@ def main():
                         print(f"Timeout ao aguardar ACK do pacote #{pacote['seq_num']}")
                         break
 
+                fin_msg = {
+                    "tipo": "FIN"
+                }
+                sock.sendto(json.dumps(fin_msg).encode('utf-8'), (IP, PORT))
+                print("Mensagem finalizada (FIN enviado).")
+
     except socket.timeout:
         print("TIMEOUT no handshake")
 
