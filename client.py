@@ -1,6 +1,7 @@
 import socket
 import json
 import sys
+import select, time
 from utils import fragmentar_e_montar, calcular_checksum
 
 def main():
@@ -65,22 +66,58 @@ def main():
                 lista_pdus = fragmentar_e_montar(mensagem_usuario)
                 print(f"[FASE 1 OK] Lista gerada: {lista_pdus}")
 
-                for pacote in lista_pdus:
-                    try:
-                        sock.sendto(json.dumps(pacote).encode('utf-8'), (IP, PORT))
-                        print(f"Pacote de sequência #{pacote['seq_num']} enviado.")
+                base_janela = 0
+                proximo_seq_num = 0
+                total_pacotes = len(lista_pdus)
+                
+                timers = {} 
+                pacotes_ack_recebidos = set() 
 
-                        data_ack, addr = sock.recvfrom(1024)
+                while base_janela < total_pacotes:
+                    
+                    tempo_atual = time.time()
+                    limite_janela = min(base_janela + janela_atual, total_pacotes)
+                    
+                    for i in range(base_janela, limite_janela):
+                        if i == proximo_seq_num:
+                            pacote = lista_pdus[i]
+                            sock.sendto(json.dumps(pacote).encode('utf-8'), (IP, PORT))
+                            print(f"[>] Enviado pacote #{pacote['seq_num']}")
+                            timers[i] = time.time()
+                            proximo_seq_num += 1
+                            
+                        elif i < proximo_seq_num and i not in pacotes_ack_recebidos:
+                            if (tempo_atual - timers.get(i, tempo_atual)) > 5.0:
+                                if modo_escolhido == "Repetição Seletiva":
+                                    print(f"    [TIMEOUT SR] Pacote avulso #{i} falhou. Reenviando apenas o #{i}.")
+                                    pacote = lista_pdus[i]
+                                    sock.sendto(json.dumps(pacote).encode('utf-8'), (IP, PORT))
+                                    timers[i] = time.time() 
+                                    
+                                elif modo_escolhido == "Go-Back-N" and i == base_janela:
+                                    print(f"    [TIMEOUT GBN] Base #{base_janela} falhou. Retransmitindo janela inteira do começo.")
+                                    proximo_seq_num = base_janela 
+                                    timers[base_janela] = time.time()
+                                    break 
+
+                    pronto_para_ler, _, _ = select.select([sock], [], [], 0.1)
+
+                    if pronto_para_ler:
+                        data_ack, _ = sock.recvfrom(1024)
                         ack = json.loads(data_ack.decode('utf-8'))
-
-                        if ack.get("tipo") == "ACK" and ack.get("seq_num") == pacote["seq_num"]:
-                            print(f"Recebido ACK para o pacote de sequência #{pacote['seq_num']}")
-                        else:
-                            print(f"ACK inválido ou inesperado para o pacote #{pacote['seq_num']}")
-
-                    except socket.timeout:
-                        print(f"Timeout ao aguardar ACK do pacote #{pacote['seq_num']}")
-                        break
+                        
+                        if ack.get("tipo") == "ACK":
+                            seq_ack = ack.get("seq_num")
+                            print(f"    [<] Recebido ACK para o pacote #{seq_ack}")
+                            
+                            if modo_escolhido == "Go-Back-N":
+                                if seq_ack >= base_janela:
+                                    base_janela = seq_ack + 1
+                                    
+                            elif modo_escolhido == "Repetição Seletiva":
+                                pacotes_ack_recebidos.add(seq_ack)
+                                while base_janela in pacotes_ack_recebidos:
+                                    base_janela += 1
 
                 fin_msg = {
                     "tipo": "FIN"
