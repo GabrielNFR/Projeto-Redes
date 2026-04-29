@@ -1,6 +1,8 @@
 import socket
 import json
 import sys
+from utils import calcular_checksum
+
 
 def main():
     if len(sys.argv) != 3:
@@ -17,6 +19,8 @@ def main():
 
     buffer_mensagens = {}
     cliente_ativo = None
+    modo_operacao = None
+    seq_esperado = 0
 
     while True:
         data, addr = sock.recvfrom(1024)
@@ -29,7 +33,10 @@ def main():
 
             cliente_ativo = addr
             buffer_mensagens = {}
-
+            
+            modo_operacao = mensagem.get("modo")
+            seq_esperado = 0
+            
             resposta = {
                 "tipo": "HANDSHAKE_ACK",
                 "janela_inicial": 5,
@@ -46,7 +53,28 @@ def main():
 
             print(f"\nRecebido pacote DATA #{seq_num}, payload: '{payload}'")
 
-            buffer_mensagens[seq_num] = payload
+        if calcular_checksum(payload) != checksum:
+            print(f"[ERRO] Checksum inválido no pacote #{seq_num}")
+            continue
+        
+        if modo_operacao == "Go-Back-N":
+            if seq_num == seq_esperado:
+                buffer_mensagens[seq_num] = payload
+                seq_esperado += 1
+
+                ack = {
+                    "tipo": "ACK",
+                    "seq_num": seq_num
+                }
+            else:
+                ack = {
+                    "tipo": "ACK",
+                    "seq_num": seq_esperado - 1
+                }
+
+        elif modo_operacao == "Repetição Seletiva":
+            if seq_num not in buffer_mensagens:
+                buffer_mensagens[seq_num] = payload
 
             ack = {
                 "tipo": "ACK",
