@@ -53,33 +53,33 @@ def main():
 
             print(f"\nRecebido pacote DATA #{seq_num}, payload: '{payload}'")
 
-        if calcular_checksum(payload) != checksum:
-            print(f"[ERRO] Checksum inválido no pacote #{seq_num}")
-            continue
-        
-        if modo_operacao == "Go-Back-N":
-            if seq_num == seq_esperado:
-                buffer_mensagens[seq_num] = payload
-                seq_esperado += 1
+            if calcular_checksum(payload) != checksum:
+                print(f"[ERRO] Checksum inválido no pacote #{seq_num}")
+                continue
+            
+            if modo_operacao == "Go-Back-N":
+                if seq_num == seq_esperado:
+                    buffer_mensagens[seq_num] = payload
+                    seq_esperado += 1
+
+                    ack = {
+                        "tipo": "ACK",
+                        "seq_num": seq_num
+                    }
+                else:
+                    ack = {
+                        "tipo": "ACK",
+                        "seq_num": seq_esperado - 1
+                    }
+
+            elif modo_operacao == "Repetição Seletiva":
+                if seq_num not in buffer_mensagens:
+                    buffer_mensagens[seq_num] = payload
 
                 ack = {
                     "tipo": "ACK",
                     "seq_num": seq_num
                 }
-            else:
-                ack = {
-                    "tipo": "ACK",
-                    "seq_num": seq_esperado - 1
-                }
-
-        elif modo_operacao == "Repetição Seletiva":
-            if seq_num not in buffer_mensagens:
-                buffer_mensagens[seq_num] = payload
-
-            ack = {
-                "tipo": "ACK",
-                "seq_num": seq_num
-            }
 
             sock.sendto(json.dumps(ack).encode('utf-8'), addr)
             print(f"ACK enviado para o pacote #{seq_num}")

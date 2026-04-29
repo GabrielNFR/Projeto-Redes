@@ -64,7 +64,11 @@ def main():
                     continue
 
                 lista_pdus = fragmentar_e_montar(mensagem_usuario)
-                print(f"[FASE 1 OK] Lista gerada: {lista_pdus}")
+                
+                print(f"\n[FASE 1 OK] Foram gerados {len(lista_pdus)} pacotes:")
+                for p in lista_pdus:
+                    print(f"  -> Pacote #{p['seq_num']} | Payload: '{p['payload']}' | Checksum: {p['checksum'][:10]}...")
+                print("-" * 40)
 
                 base_janela = 0
                 proximo_seq_num = 0
