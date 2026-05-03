@@ -28,7 +28,7 @@ Isso facilita acompanhar logs e respostas em tempo real.
 No primeiro terminal:
 
 ```bash
-python src/server.py 127.0.0.1 5000
+python server.py 127.0.0.1 5000
 ```
 
 Saída esperada:
@@ -42,7 +42,7 @@ Servidor escutando em 127.0.0.1:5000
 No segundo terminal:
 
 ```bash
-python src/client.py 127.0.0.1 5000
+python client.py 127.0.0.1 5000
 ```
 
 O cliente vai pedir:
@@ -100,8 +100,8 @@ Mensagem completa recebida: 'Sua mensagem original'
 
 ## Exemplo de fluxo rápido 
 
-1. Inicie o servidor em um terminal: `python src/server.py 127.0.0.1 5000`
-2. Inicie o cliente no outro terminal: `python src/client.py 127.0.0.1 5000`
+1. Inicie o servidor em um terminal: `python server.py 127.0.0.1 5000`
+2. Inicie o cliente no outro terminal: `python client.py 127.0.0.1 5000`
 3. No cliente, escolha o modo de operação (1 para Go-Back-N ou 2 para Repetição Seletiva).
 4. Informe o tamanho máximo da mensagem (mínimo de 30).
 5. O _Handshake_ será realizado e a janela inicial (5) informada.
