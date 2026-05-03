@@ -114,6 +114,11 @@ def main():
                             seq_ack = ack.get("seq_num")
                             print(f"    [<] Recebido ACK para o pacote #{seq_ack}")
                             
+                            nova_janela = ack.get("janela")
+                            if nova_janela and nova_janela != janela_atual:
+                                print(f"    [JANELA] Servidor ajustou janela: {janela_atual} → {nova_janela}")
+                                janela_atual = nova_janela
+                            
                             if modo_escolhido == "Go-Back-N":
                                 if seq_ack >= base_janela:
                                     base_janela = seq_ack + 1

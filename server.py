@@ -21,6 +21,7 @@ def main():
     cliente_ativo = None
     modo_operacao = None
     seq_esperado = 0
+    janela_atual = 5
 
     while True:
         data, addr = sock.recvfrom(1024)
@@ -39,7 +40,7 @@ def main():
             
             resposta = {
                 "tipo": "HANDSHAKE_ACK",
-                "janela_inicial": 5,
+                "janela_inicial": janela_atual,
                 "status": "ACEITO"
             }
 
@@ -55,6 +56,8 @@ def main():
 
             if calcular_checksum(payload) != checksum:
                 print(f"[ERRO] Checksum inválido no pacote #{seq_num}")
+                janela_atual = max(1, janela_atual - 1)
+                print(f"[JANELA] Reduzida para {janela_atual}")
                 continue
             
             if modo_operacao == "Go-Back-N":
@@ -64,12 +67,14 @@ def main():
 
                     ack = {
                         "tipo": "ACK",
-                        "seq_num": seq_num
+                        "seq_num": seq_num,
+                        "janela": janela_atual
                     }
                 else:
                     ack = {
                         "tipo": "ACK",
-                        "seq_num": seq_esperado - 1
+                        "seq_num": seq_esperado - 1,
+                        "janela": janela_atual
                     }
 
             elif modo_operacao == "Repetição Seletiva":
@@ -78,11 +83,15 @@ def main():
 
                 ack = {
                     "tipo": "ACK",
-                    "seq_num": seq_num
+                    "seq_num": seq_num,
+                    "janela": janela_atual
                 }
 
             sock.sendto(json.dumps(ack).encode('utf-8'), addr)
             print(f"ACK enviado para o pacote #{seq_num}")
+            
+            janela_atual = min(5, janela_atual + 1)
+            print(f"[JANELA] Ajustada para {janela_atual}")
 
         elif mensagem.get("tipo") == "FIN":
             if buffer_mensagens:
