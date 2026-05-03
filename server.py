@@ -6,7 +6,7 @@ from utils import calcular_checksum
 
 def main():
     if len(sys.argv) != 3:
-        print("Uso correto: python src/server.py <IP> <PORTA>")
+        print("Uso correto: python server.py <IP> <PORTA>")
         sys.exit(1)
 
     IP = sys.argv[1]

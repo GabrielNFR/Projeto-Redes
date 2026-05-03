@@ -6,7 +6,7 @@ from utils import fragmentar_e_montar, calcular_checksum
 
 def main():
     if len(sys.argv) != 3:
-        print("Uso correto: python src/client.py <IP> <PORTA>")
+        print("Uso correto: python client.py <IP> <PORTA>")
         sys.exit(1)
 
     IP = sys.argv[1]
