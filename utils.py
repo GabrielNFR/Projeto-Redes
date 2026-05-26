@@ -1,7 +1,6 @@
-import hashlib
-
 def calcular_checksum(payload):
-    return hashlib.md5(payload.encode('utf-8')).hexdigest()
+    soma = sum(ord(c) for c in payload)
+    return str((~soma) & 0xFF)
 
 def fragmentar_e_montar(mensagem):
     pacotes = []
