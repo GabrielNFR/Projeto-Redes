@@ -16,3 +16,8 @@ def fragmentar_e_montar(mensagem):
         pacotes.append(pacote)
         seq_num += 1
     return pacotes
+
+
+def criptografar_xor(mensagem,chave_privada):
+    chave_privada=int(chave_privada)    
+    return "".join(chr(ord(c)^chave_privada) for c in mensagem)

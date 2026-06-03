@@ -1,10 +1,13 @@
 import socket
 import json
 import sys
-from utils import calcular_checksum
+from utils import calcular_checksum,criptografar_xor
+import os  
+from dotenv import load_dotenv
 
 
 def main():
+    load_dotenv()
     if len(sys.argv) != 3:
         print("Uso correto: python server.py <IP> <PORTA>")
         sys.exit(1)
@@ -97,6 +100,8 @@ def main():
             if buffer_mensagens:
                 chaves_ordenadas = sorted(buffer_mensagens.keys())
                 mensagem_completa = ''.join(buffer_mensagens[k] for k in chaves_ordenadas)
+                chave = os.getenv("chave_privada")
+                mensagem_completa= criptografar_xor(mensagem_completa,chave)
                 print(f"\nMensagem completa recebida: '{mensagem_completa}'")
             
             buffer_mensagens = {}

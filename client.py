@@ -2,9 +2,12 @@ import socket
 import json
 import sys
 import select, time
-from utils import fragmentar_e_montar, calcular_checksum
+import os
+from dotenv import load_dotenv
+from utils import fragmentar_e_montar, calcular_checksum, criptografar_xor
 
 def main():
+    load_dotenv()
     if len(sys.argv) != 3:
         print("Uso correto: python client.py <IP> <PORTA>")
         sys.exit(1)
@@ -30,7 +33,6 @@ def main():
             break
         else:
             print("Opção inválida, escolha 1 ou 2.")
-
     tam_max = int(input("Digite o limite máximo de caracteres por envio (Mínimo de 30): "))
     if tam_max < 30:
         tam_max = 30
@@ -51,6 +53,7 @@ def main():
         if resposta.get("tipo") == "HANDSHAKE_ACK":
             janela_atual = resposta.get("janela_inicial")
             status = resposta.get("status")
+            chave = resposta.get("codigo-confir")
 
             print("Conexão estabelecida com sucesso.")
             print(f"Servidor aceitou com janela: {janela_atual}")
@@ -63,6 +66,8 @@ def main():
                     print("Erro: Mensagem muito grande.")
                     continue
 
+                chave = os.getenv("chave_privada")
+                mensagem_usuario = criptografar_xor(mensagem_usuario, chave)
                 lista_pdus = fragmentar_e_montar(mensagem_usuario)
                 
                 print(f"\n[FASE 1 OK] Foram gerados {len(lista_pdus)} pacotes:")
