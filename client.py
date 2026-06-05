@@ -53,7 +53,6 @@ def main():
         if resposta.get("tipo") == "HANDSHAKE_ACK":
             janela_atual = resposta.get("janela_inicial")
             status = resposta.get("status")
-            chave = resposta.get("codigo-confir")
 
             print("Conexão estabelecida com sucesso.")
             print(f"Servidor aceitou com janela: {janela_atual}")

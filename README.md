@@ -6,6 +6,10 @@ Projeto de comunicação UDP entre cliente e servidor construído para simular u
 
 - Python 3.8+ instalado
 - VS Code (recomendado para usar terminal dividido)
+- Instalar dependência:
+  ```bash
+  pip install python-dotenv
+  ```
 
 ## Como executar
 
@@ -13,7 +17,17 @@ Projeto de comunicação UDP entre cliente e servidor construído para simular u
 
 Abra a pasta do projeto no VS Code e confirme que você está na raiz (onde está este README).
 
-### 2) Use terminal dividido (recomendado)
+### 2) Configure a chave de criptografia
+
+Crie um arquivo `.env` na raiz do projeto com o conteúdo:
+
+```
+chave_privada=42
+```
+
+Este arquivo contém a chave simétrica usada para cifrar/decifrar as mensagens via XOR. **Não versione este arquivo** (já está no `.gitignore`). O valor `42` pode ser qualquer número inteiro, desde que seja o mesmo no servidor e no cliente.
+
+### 3) Use terminal dividido (recomendado)
 
 Para visualizar servidor e cliente ao mesmo tempo:
 
@@ -23,7 +37,7 @@ Para visualizar servidor e cliente ao mesmo tempo:
 
 Isso facilita acompanhar logs e respostas em tempo real.
 
-### 3) Inicie o servidor
+### 4) Inicie o servidor
 
 No primeiro terminal:
 
@@ -37,7 +51,7 @@ Saída esperada:
 Servidor escutando em 127.0.0.1:5000
 ```
 
-### 4) Inicie o cliente
+### 5) Inicie o cliente
 
 No segundo terminal:
 
@@ -54,7 +68,7 @@ O cliente vai pedir:
 
 Se tudo ocorrer bem, o cliente recebe `HANDSHAKE_ACK` e mostra status de conexão.
 
-### 5) Inicialização da Conexão
+### 6) Inicialização da Conexão
 
 Após informar o modo e o tamanho máximo, o cliente iniciará a comunicação (Handshake).
 Saída esperada no cliente:
@@ -66,7 +80,7 @@ Status: ACEITO
 ```
 No servidor, você verá o registro das preferências escolhidas e a confirmação de recebimento.
 
-### 6) Transmissão de Mensagens
+### 7) Transmissão de Mensagens
 
 O cliente ficará aguardando entrada de texto:
 ```bash
@@ -74,7 +88,7 @@ Digite uma mensagem:
 ```
 Digite uma mensagem (obedecendo ao limite de caracteres escolhido no passo 4) e pressione Enter.
 
-### 7) Acompanhamento da Transmissão (Terminais)
+### 8) Acompanhamento da Transmissão (Terminais)
 
 Após pressionar Enter, observe o comportamento simultâneo nos dois terminais:
 
@@ -106,7 +120,7 @@ Mensagem completa recebida: 'Sua mensagem original'
 4. Informe o tamanho máximo da mensagem (mínimo de 30).
 5. O _Handshake_ será realizado e a janela inicial (5) informada.
 6. Digite um texto no terminal do cliente.
-7. O cliente irá exibir a fragmentação (pacotes de 4 caracteres contendo um número de sequência e o hash verificador md5 - _Checksum_).
+7. O cliente irá exibir a fragmentação (pacotes de 4 caracteres cifrados com XOR contendo um número de sequência e checksum).
 8. O cliente enviará os metadados e aguardará/receberá os ACKs correspondentes com base no limite da janela.
 9. Ao receber um sinal `FIN`, o servidor remonta e imprime a mensagem original perfeitamente.
 
