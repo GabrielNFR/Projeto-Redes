@@ -59,8 +59,20 @@ def main():
 
             if calcular_checksum(payload) != checksum:
                 print(f"[ERRO] Checksum inválido no pacote #{seq_num}")
+
                 janela_atual = max(1, janela_atual - 1)
                 print(f"[JANELA] Reduzida para {janela_atual}")
+
+                nack = {
+                    "tipo": "NACK",
+                    "seq_num": seq_num,
+                    "janela": janela_atual,
+                    "checksum": calcular_checksum(f"NACK{seq_num}")
+                }
+
+                sock.sendto(json.dumps(nack).encode('utf-8'), addr)
+                print(f"NACK enviado para o pacote #{seq_num}")
+
                 continue
             
             if modo_operacao == "Go-Back-N":
