@@ -63,13 +63,14 @@ def main():
             print(f"Status: {status}")
 
             while True:
-                mensagem_usuario = input("Digite a mensagem: ")
+                mensagem_usuario = input("\nDigite a mensagem: ")
 
                 if len(mensagem_usuario) > tam_max:
                     print("Erro: Mensagem muito grande.")
                     continue
 
-                chave = os.getenv("chave_privada")
+                # Ajuste de segurança: usa a chave '42' se o .env não for encontrado
+                chave = os.getenv("chave_privada") or "42"
                 mensagem_usuario = criptografar_xor(mensagem_usuario, chave)
 
                 lista_pdus = fragmentar_e_montar(mensagem_usuario)
@@ -83,6 +84,11 @@ def main():
                         f"Checksum: {p['checksum'][:10]}..."
                     )
 
+                print("-" * 40)
+                
+                print("🛠️  [CONFIGURAÇÃO DE SIMULAÇÃO DE ERROS]")
+                pkt_corromper = int(input("Qual número de pacote deseja CORROMPER? (Digite -1 para nenhum): "))
+                pkt_perder = int(input("Qual número de pacote deseja PERDER/OMITIR? (Digite -1 para nenhum): "))
                 print("-" * 40)
 
                 base_janela = 0
@@ -101,10 +107,25 @@ def main():
 
                         if i == proximo_seq_num:
                             pacote = lista_pdus[i]
+                            
+                            pacote_enviar = pacote.copy()
+                            deve_enviar = True
 
-                            sock.sendto(json.dumps(pacote).encode('utf-8'), (IP, PORT))
+                            if i == pkt_corromper:
+                                print(f"   💥 [SIMULAÇÃO] Forçando erro de Checksum no pacote #{i}!")
+                                pacote_enviar["checksum"] = "checksum_totalmente_errado_via_simulacao"
+                                pkt_corromper = -1
 
-                            print(f"[>] Enviado pacote #{pacote['seq_num']}")
+                            if i == pkt_perder:
+                                print(f"   👻 [SIMULAÇÃO] Omitindo envio do pacote #{i} para simular perda em trânsito!")
+                                deve_enviar = False
+                                pkt_perder = -1
+
+                            if deve_enviar:
+                                sock.sendto(json.dumps(pacote_enviar).encode('utf-8'), (IP, PORT))
+                                print(f"[>] Enviado pacote #{pacote_enviar['seq_num']}")
+                            else:
+                                print(f"[>] Pacote #{pacote_enviar['seq_num']} foi 'perdido' na simulação.")
 
                             timers[i] = time.time()
                             proximo_seq_num += 1
