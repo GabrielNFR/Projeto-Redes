@@ -163,16 +163,11 @@ def main():
                         if resposta_servidor.get("tipo") == "ACK":
                             seq_ack = resposta_servidor.get("seq_num")
 
-                            print(f"    [<] Recebido ACK para o pacote #{seq_ack}")
-
                             nova_janela = resposta_servidor.get("janela")
-
-                            if nova_janela and nova_janela != janela_atual:
-                                print(
-                                    f"    [JANELA] Servidor ajustou janela: "
-                                    f"{janela_atual} → {nova_janela}"
-                                )
+                            if nova_janela is not None:
                                 janela_atual = nova_janela
+
+                            print(f"    [<] Recebido ACK para o pacote #{seq_ack} | Janela: {janela_atual}")
 
                             if modo_escolhido == "Go-Back-N":
                                 if seq_ack >= base_janela:
@@ -187,16 +182,11 @@ def main():
                         elif resposta_servidor.get("tipo") == "NACK":
                             seq_nack = resposta_servidor.get("seq_num")
 
-                            print(f"    [!] Recebido NACK para o pacote #{seq_nack}")
-
                             nova_janela = resposta_servidor.get("janela")
-
-                            if nova_janela and nova_janela != janela_atual:
-                                print(
-                                    f"    [JANELA] Servidor ajustou janela: "
-                                    f"{janela_atual} → {nova_janela}"
-                                )
+                            if nova_janela is not None:
                                 janela_atual = nova_janela
+
+                            print(f"    [!] Recebido NACK para o pacote #{seq_nack} | Janela: {janela_atual}")
 
                             if seq_nack is not None and 0 <= seq_nack < total_pacotes:
                                 pacote = lista_pdus[seq_nack]

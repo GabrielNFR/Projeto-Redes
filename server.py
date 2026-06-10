@@ -55,10 +55,12 @@ def main():
             payload = mensagem.get('payload')
             checksum = mensagem.get('checksum')
 
-            print(f"\nRecebido pacote DATA #{seq_num}, payload: '{payload}'")
+            bytes_payload = len(payload.encode('utf-8'))
+            checksum_calculado = calcular_checksum(payload)
 
-            if calcular_checksum(payload) != checksum:
-                print(f"[ERRO] Checksum inválido no pacote #{seq_num}")
+            if checksum_calculado != checksum:
+                print(f"\nRecebido pacote DATA #{seq_num} | Payload: '{payload}' | Bytes: {bytes_payload}")
+                print(f"Checksum recebido: {checksum} | Checksum calculado: {checksum_calculado} → Status: CORROMPIDO")
 
                 janela_atual = max(1, janela_atual - 1)
                 print(f"[JANELA] Reduzida para {janela_atual}")
@@ -74,6 +76,8 @@ def main():
                 print(f"NACK enviado para o pacote #{seq_num}")
 
                 continue
+
+            print(f"\nRecebido pacote DATA #{seq_num} | Payload: '{payload}' | Bytes: {bytes_payload} | Checksum: {checksum} | Status: OK")
             
             if modo_operacao == "Go-Back-N":
                 if seq_num == seq_esperado:
@@ -85,12 +89,14 @@ def main():
                         "seq_num": seq_num,
                         "janela": janela_atual
                     }
+
+                    sock.sendto(json.dumps(ack).encode('utf-8'), addr)
+                    print(f"ACK enviado para o pacote #{seq_num}")
+
+                    janela_atual = min(5, janela_atual + 1)
+                    print(f"[JANELA] Ajustada para {janela_atual}")
                 else:
-                    ack = {
-                        "tipo": "ACK",
-                        "seq_num": seq_esperado - 1,
-                        "janela": janela_atual
-                    }
+                    print(f"[GBN] Pacote #{seq_num} fora de ordem (esperado #{seq_esperado}). Descartado.")
 
             elif modo_operacao == "Repetição Seletiva":
                 if seq_num not in buffer_mensagens:
@@ -102,11 +108,11 @@ def main():
                     "janela": janela_atual
                 }
 
-            sock.sendto(json.dumps(ack).encode('utf-8'), addr)
-            print(f"ACK enviado para o pacote #{seq_num}")
-            
-            janela_atual = min(5, janela_atual + 1)
-            print(f"[JANELA] Ajustada para {janela_atual}")
+                sock.sendto(json.dumps(ack).encode('utf-8'), addr)
+                print(f"ACK enviado para o pacote #{seq_num}")
+
+                janela_atual = min(5, janela_atual + 1)
+                print(f"[JANELA] Ajustada para {janela_atual}")
 
         elif mensagem.get("tipo") == "FIN":
             if buffer_mensagens:
