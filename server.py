@@ -56,7 +56,7 @@ def main():
             checksum = mensagem.get('checksum')
 
             bytes_payload = len(payload.encode('utf-8'))
-            checksum_calculado = calcular_checksum(payload)
+            checksum_calculado = calcular_checksum(seq_num, payload)
 
             if checksum_calculado != checksum:
                 print(f"\nRecebido pacote DATA #{seq_num} | Payload: '{payload}' | Bytes: {bytes_payload}")
@@ -68,8 +68,7 @@ def main():
                 nack = {
                     "tipo": "NACK",
                     "seq_num": seq_num,
-                    "janela": janela_atual,
-                    "checksum": calcular_checksum(f"NACK{seq_num}")
+                    "janela": janela_atual
                 }
 
                 sock.sendto(json.dumps(nack).encode('utf-8'), addr)

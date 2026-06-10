@@ -1,5 +1,5 @@
-def calcular_checksum(payload):
-    soma = sum(ord(c) for c in payload)
+def calcular_checksum(seq_num, payload):
+    soma = sum(ord(c) for c in (str(seq_num) + payload))
     return str((~soma) & 0xFF)
 
 def fragmentar_e_montar(mensagem):
@@ -10,7 +10,7 @@ def fragmentar_e_montar(mensagem):
         pacote = {
             "tipo": "DATA",
             "seq_num": seq_num,
-            "checksum": calcular_checksum(payload),
+            "checksum": calcular_checksum(seq_num, payload),
             "payload": payload
         }
         pacotes.append(pacote)
